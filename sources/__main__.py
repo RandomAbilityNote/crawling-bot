@@ -1,8 +1,14 @@
 import gspread
-from shared import spreadsheet_url
+from shared import *
+from crawler import Crawler
 
-# print(os.path.dirname("resources"))
-print(spreadsheet_url)
+crawler = Crawler()
+
+print(lastest_version)
+result = crawler.get_crawling_data("https://blog.naver.com/jhwon_00/222569309782")
+
+print(result)
+
 # gc = gspread.service_account(json_file_path)
 # doc = gc.open_by_url(spreadsheet_url)
 
