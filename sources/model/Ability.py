@@ -11,9 +11,9 @@ class CrawlingDTO:
     
 
 class Ability:
-    def __init__(self, name: str, desc: str, tribes: str, tip: str = "", category: str = "", image: str = ""):
+    def __init__(self, name: str, description: str, tribes: str, tip: str = "", category: str = "", image: str = ""):
         self.name = name
-        self.desc = desc
+        self.description = description
         self.tribes = tribes
         self.tip = tip
         self.category = category

@@ -35,9 +35,6 @@ class Crawler:
             rows = self.driver.find_elements(By.CLASS_NAME, "se-tr")
             rows.pop(0)
 
-            print(f"📌 현재 URL: {self.driver.current_url}")
-            print(f"📌 페이지 제목: {self.driver.title}")
-
             if rows:
                 print("✅ 테이블 데이터 발견!")
                 for row in rows:

@@ -2,16 +2,18 @@ from gspread import service_account, WorksheetNotFound, Worksheet
 from shared import *
 from crawler import Crawler
 from model import *
+from operator import attrgetter
 
 json_file_path = os.path.join(os.path.dirname(__file__),".." ,"resources", "key.json")
 gc = service_account(json_file_path)
 doc = gc.open_by_url(spreadsheet_url)
 
 crawler = Crawler()
-crawling_data = crawler.get_crawling_data("https://blog.naver.com/jhwon_00/222569309782")
+url = "https://blog.naver.com/jhwon_00/222569309782"
+crawling_data = crawler.get_crawling_data(url)
 crawling_data.pop(0)
 
-header = ["name", "description", "tribes", "tip", "category", "imgae"]
+header = ["name", "description", "tribes", "tip", "category", "image"]
 
 def update(prev_sheet: Worksheet, sheet: Worksheet):
     records = prev_sheet.get_all_records()
@@ -31,8 +33,9 @@ def update(prev_sheet: Worksheet, sheet: Worksheet):
         else:
             new_list.append(Ability(data.name, data.desc, data.tribes))
 
+    getter = attrgetter(*header)
     sheet.update(range_name=f"A1:F1", values= [header])
-    sheet.update(range_name=f"A2:F{2+len(crawling_data)-1}", values= [[ability.name, ability.desc, ability.tribes, ability.tip, ability.category, ability.image] for ability in new_list])
+    sheet.update(range_name=f"A2:F{2+len(crawling_data)-1}", values= [list(getter(ability)) for ability in new_list])
 
 try:
     prev_sheet = doc.worksheet(prev_version)
