@@ -7,4 +7,5 @@ def init_env():
 init_env()
 
 spreadsheet_url = os.getenv("SHEET_URL")
-lastest_version = os.getenv("VERSION")
+prev_version = os.getenv("PREV_VERSION")
+lastest_version = os.getenv("LASTEST_VERSION")

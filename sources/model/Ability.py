@@ -8,9 +8,9 @@ class CrawlingDTO:
     
     def __repr__(self):
         return f"name: {self.name} desc: {self.desc} tribes: {self.tribes}"
+    
 
-
-class Ablity:
+class Ability:
     def __init__(self, name: str, desc: str, tribes: str, tip: str = "", category: str = "", image: str = ""):
         self.name = name
         self.desc = desc
