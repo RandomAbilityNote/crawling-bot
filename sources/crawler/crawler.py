@@ -6,7 +6,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
-from model import Ablity
+from model import CrawlingDTO
 
 
 class Crawler:
@@ -18,10 +18,10 @@ class Crawler:
         self.driver = webdriver.Chrome(service=service, options=options)
         self.wait = WebDriverWait(self.driver, 10)  # 최대 10초까지 대기
     
-    def get_crawling_data(self, url: str) -> [Ablity]:
+    def get_crawling_data(self, url: str) -> [CrawlingDTO]:
         print(f"🔍 크롤링 시작: {url}")
         self.driver.get(url)
-        result: [Ablity] = []
+        result: [CrawlingDTO] = []
         try:
             # 1️⃣ iframe이 로드될 때까지 대기
             self.wait.until(EC.presence_of_element_located((By.TAG_NAME, "iframe")))
@@ -32,8 +32,6 @@ class Crawler:
             # 3️⃣ iframe 내부로 전환
             self.driver.switch_to.frame(iframe)
 
-            # 4️⃣ iframe 내 HTML 파싱
-            # soup = BeautifulSoup(self.driver.page_source, "html.parser")
             rows = self.driver.find_elements(By.CLASS_NAME, "se-tr")
             rows.pop(0)
 
@@ -44,7 +42,7 @@ class Crawler:
                 print("✅ 테이블 데이터 발견!")
                 for row in rows:
                     columns = list(map(lambda r: r.text, row.find_elements(By.TAG_NAME, "td")))
-                    result.append(Ablity(columns[1], columns[2], columns[0]))
+                    result.append(CrawlingDTO(columns[1], columns[2], columns[0]))
             else:
                 print("⚠️ 테이블 데이터가 없습니다!")
 
