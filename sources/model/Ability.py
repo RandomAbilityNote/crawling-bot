@@ -1,5 +1,3 @@
-import enum
-
 class CrawlingDTO:
     def __init__(self, name: str, desc: str, tribes: str):
         self.name = name
