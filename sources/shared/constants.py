@@ -10,3 +10,5 @@ spreadsheet_url = os.getenv("SHEET_URL")
 prev_version = os.getenv("PREV_VERSION")
 lastest_version = os.getenv("LASTEST_VERSION")
 api_key = os.getenv("API_KEY")
+api_secret = os.getenv("API_SECRET")
+
