@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, filedialog
 from crawler import Crawler
 from gspread import service_account
 from shared import *
@@ -19,6 +19,7 @@ class App:
         self._getter = attrgetter(*self._columns)
         self.setup_ui()
         self._progress = 0
+        self._image_files = []
 
     @property
     def progress(self):
@@ -54,6 +55,11 @@ class App:
 
         button_frame = tk.Frame(main_frame)
         button_frame.pack(side=tk.RIGHT, fill=tk.Y, padx=10, pady=10)
+
+                # URL 표시 텍스트 필드 (읽기 전용)
+        self._url_text = tk.Text(button_frame, height=1, width=30)
+        self._url_text.pack(fill=tk.BOTH, pady=5, expand=True, side=tk.TOP)
+        self._url_text.config(state=tk.DISABLED)
 
         btn_load_data = tk.Button(button_frame, text="최신 데이터 가져오기", command=self.start_loading)
         btn_load_data.pack(fill=tk.X, pady=5)
@@ -120,7 +126,12 @@ class App:
             self.tree.insert("", tk.END, values=self._getter(data))
 
     def get_image(self):
-        print("이미지 가져오기 클릭됨!")
+        self._image_files = filedialog.askopenfilenames(title="이미지 가져오기", filetypes=[("Image Files", "*.png *.jpg *.jpeg")])
+        self._url_text.config(state=tk.NORMAL)
+        self._url_text.delete(1.0, tk.END)
+        self._url_text.insert(tk.END, "\n\n\n".join(self._image_files))
+        self._url_text.config(state=tk.DISABLED)  # 다시 읽기 전용으로 설정
+        print(self._image_files)
 
     def upload_image(self):
         url = "https://example.com/image.jpg"
