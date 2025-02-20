@@ -9,13 +9,14 @@ class CrawlingDTO:
     
 
 class Ability:
-    def __init__(self, name: str, description: str, tribes: str, tip: str = "", category: str = "", image: str = ""):
+    def __init__(self, name: str, description: str, tribes: str, tip: str = "", category: str = "", image: str = "", new: bool = False):
         self.name = name
         self.description = description
         self.tribes = tribes
         self.tip = tip
         self.category = category
         self.image = image
+        self.new = new
 
     def __repr__(self):
         return f"name: {self.name}"
