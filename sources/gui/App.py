@@ -5,7 +5,10 @@ from gspread import service_account
 from shared import *
 from model import *
 from operator import attrgetter
+from cloudinary import uploader
+import concurrent.futures
 import threading
+import pyperclip
 
 class App:
     def __init__(self, root):
@@ -19,7 +22,9 @@ class App:
         self._getter = attrgetter(*self._columns)
         self.setup_ui()
         self._progress = 0
-        self._image_files = []
+        self._image_files: list = []
+        self._uploaded_image_urls: list = []
+        self._lock = threading.Lock()  # 스레드 안전성을 위한 Lock
 
     @property
     def progress(self):
@@ -67,7 +72,7 @@ class App:
         btn_get_image = tk.Button(button_frame, text="이미지 가져오기", command=self.get_image)
         btn_get_image.pack(fill=tk.X, pady=5)
 
-        btn_upload = tk.Button(button_frame, text="이미지를 URL로 변환", command=self.upload_image)
+        btn_upload = tk.Button(button_frame, text="이미지를 URL로 변환", command=self.upload_images_concurrently)
         btn_upload.pack(fill=tk.X, pady=5)
 
         btn_save = tk.Button(button_frame, text="저장", command=self.save_data)
@@ -125,16 +130,57 @@ class App:
         for data in self._dataSource:
             self.tree.insert("", tk.END, values=self._getter(data))
 
-    def get_image(self):
-        self._image_files = filedialog.askopenfilenames(title="이미지 가져오기", filetypes=[("Image Files", "*.png *.jpg *.jpeg")])
+    def update_white_board(self, content):
         self._url_text.config(state=tk.NORMAL)
         self._url_text.delete(1.0, tk.END)
-        self._url_text.insert(tk.END, "\n\n\n".join(self._image_files))
+        self._url_text.insert(tk.END, content)
         self._url_text.config(state=tk.DISABLED)  # 다시 읽기 전용으로 설정
-        print(self._image_files)
 
-    def upload_image(self):
-        url = "https://example.com/image.jpg"
+    def get_image(self):
+        self._image_files = filedialog.askopenfilenames(title="이미지 가져오기", filetypes=[("Image Files", "*.png *.jpg *.jpeg")])
+        self.update_white_board("\n\n\n".join(self._image_files))
+
+    def upload_image(self,image_path):
+        print(f"image_path: {image_path}")
+        try:
+            result = uploader.upload(image_path)
+            image_url = result.get("secure_url")
+
+            if image_url:
+                with self._lock:
+                    self._uploaded_image_urls.append(image_url)
+                print(f"✅ 업로드 성공: {image_url}")
+            else:
+                print(f"❌ 업로드 실패: {image_path}")
+
+        except Exception as e:
+            print(f"❌ 업로드 오류: {image_path}, 오류: {e}")
+
+    def upload_images_concurrently(self):
+        if not self._image_files:
+            print("❌ 비어있습니다")
+            return 
+        
+        self._uploaded_image_urls = ["1234","5678"]
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as worker:
+            # future_to_image = {worker.submit(self.upload_image, img): img for img in self._image_files}
+            
+            # for i, future in enumerate(concurrent.futures.as_completed(future_to_image)):
+            #     try:
+            #         future.result()  # 오류 발생 시 예외 처리
+            #     except Exception as e:
+            #         self.progress = 0
+            #         print(f"❌ Error Occured: {e}")
+            #         self._progressbar.stop()
+            #         self._uploaded_image_urls.clear()
+
+            if self._uploaded_image_urls:
+                self.update_white_board("\n\n\n".join(self._uploaded_image_urls))
+                self.copy(",".join(self._uploaded_image_urls))
+                print(f"🎉 모든 업로드 완료!")
+
+    def copy(self, content):
+        pyperclip.copy(content)        
         self.show_toast("URL이 클립보드에 복사되었습니다!")
 
     def save_data(self):
@@ -143,8 +189,16 @@ class App:
     def show_toast(self, message):
         """토스트 메시지"""
         toast = tk.Toplevel(self.root)
-        toast.overrideredirect(True)
-        toast.geometry(f"+{self.root.winfo_x() + 50}+{self.root.winfo_y() + 50}")
+        toast.overrideredirect(True)  # 기본 윈도우 장식 없애기
+        screen_width = self.root.winfo_screenwidth()  # 화면 너비
+        toast_width = 200  # 토스트 메시지의 너비
+        toast_height = 30  # 토스트 메시지의 높이
+
+        # 중앙 위쪽에 배치
+        x_pos = (screen_width - toast_width) // 2
+        y_pos = 10  # 화면의 상단 10px 위치에 배치
+        toast.geometry(f"{toast_width}x{toast_height}+{x_pos}+{y_pos}")
+
         label = tk.Label(toast, text=message, bg="black", fg="white", padx=10, pady=5)
         label.pack()
-        toast.after(2000, toast.destroy)
+        toast.after(2000, toast.destroy)  # 2초 후에 토스트 메시지 닫기

@@ -13,9 +13,9 @@ class Crawler:
         options = Options()
         options.add_argument("--headless")  # 브라우저 창 없이 실행
 
-        service = Service(ChromeDriverManager().install())
-        self.driver = webdriver.Chrome(service=service, options=options)
-        self.wait = WebDriverWait(self.driver, 10)  # 최대 10초까지 대기
+        # service = Service(ChromeDriverManager().install())
+        # self.driver = webdriver.Chrome(service=service, options=options)
+        # self.wait = WebDriverWait(self.driver, 10)  # 최대 10초까지 대기
     
     def get_crawling_data(self, url: str) -> [CrawlingDTO]:
         print(f"🔍 크롤링 시작: {url}")
