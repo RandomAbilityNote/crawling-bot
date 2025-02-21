@@ -1,7 +1,7 @@
 import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
+from tkinter import ttk, filedialog
 from crawler import Crawler
-from gspread import service_account
+from gspread import service_account, WorksheetNotFound
 from shared import *
 from model import *
 from operator import attrgetter
@@ -125,12 +125,12 @@ class App:
             print(f"Error: {e}")
 
         self.progress = 100
+        self._progressbar.stop()
         self.update_tree_view()
 
     def update_tree_view(self):
         """UI 업데이트는 메인 스레드에서 실행"""
         self.tree.after(0, self._insert_tree_data)
-        self._progressbar.stop()
 
 
     def _insert_tree_data(self):
@@ -148,7 +148,6 @@ class App:
         self.update_white_board("\n\n\n".join(self._image_files))
 
     def upload_image(self,image_path):
-        print(f"image_path: {image_path}")
         try:
             result = uploader.upload(image_path)
             image_url = result.get("secure_url")
@@ -167,19 +166,15 @@ class App:
         if not self._image_files:
             print("❌ 비어있습니다")
             return 
-        # 추후 제거
-        self._uploaded_image_urls = ["1234","5678"]
+
         with concurrent.futures.ThreadPoolExecutor(max_workers=5) as worker:
-            # future_to_image = {worker.submit(self.upload_image, img): img for img in self._image_files}
+            future_to_image = {worker.submit(self.upload_image, img): img for img in self._image_files}
             
-            # for i, future in enumerate(concurrent.futures.as_completed(future_to_image)):
-            #     try:
-            #         future.result()  # 오류 발생 시 예외 처리
-            #     except Exception as e:
-            #         self.progress = 0
-            #         print(f"❌ Error Occured: {e}")
-            #         self._progressbar.stop()
-            #         self._uploaded_image_urls.clear()
+            for i, future in enumerate(concurrent.futures.as_completed(future_to_image)):
+                try:
+                    future.result()  # 오류 발생 시 예외 처리
+                except Exception as e:
+                    self._uploaded_image_urls = []
 
             if self._uploaded_image_urls:
                 self.update_white_board("\n\n\n".join(self._uploaded_image_urls))
@@ -191,14 +186,28 @@ class App:
         self.show_toast("URL이 클립보드에 복사되었습니다!")
 
     def save_data(self):
-        print("저장 버튼 클릭됨!")
+
+        try:
+            sheet = self._doc.worksheet(lastest_version)
+            sheet.update(range_name=f"A1:G1", values= [self._columns])
+            sheet.update(range_name=f"A2:G{2+len(self._dataSource)-1}", values= [list(self._getter(ability)) for ability in self._dataSource])
+           
+            self.show_toast("시트가 저장됐습니다.")
+        except WorksheetNotFound as e :
+            self._doc.add_worksheet(title=lastest_version, rows= len(self._dataSource)+1, cols=len(self._columns))
+            sheet = self._doc.worksheet(lastest_version)
+            sheet.update(range_name=f"A1:G1", values= [self._columns])
+            sheet.update(range_name=f"A2:G{2+len(self._dataSource)-1}", values= [list(self._getter(ability)) for ability in self._dataSource])
+            self.show_toast("시트가 저장됐습니다.")
+        except Exception as e:
+             self.show_toast("오류가 발생했습니다.")        
 
     def show_toast(self, message):
         """토스트 메시지"""
         toast = tk.Toplevel(self.root)
         toast.overrideredirect(True)  # 기본 윈도우 장식 없애기
         screen_width = self.root.winfo_screenwidth()  # 화면 너비
-        toast_width = 200  # 토스트 메시지의 너비
+        toast_width = len(message) * 10  # 토스트 메시지의 너비
         toast_height = 30  # 토스트 메시지의 높이
 
         # 중앙 위쪽에 배치
@@ -211,8 +220,6 @@ class App:
         toast.after(2000, toast.destroy)  # 2초 후에 토스트 메시지 닫기
     
     def on_ctrl_v(self, event):
-        print("⌨️ 이벤트 감지")
-        """Control + V 이벤트가 발생하면 특정 데이터를 삽입"""
         selected_item = self.tree.selection()  # 선택된 항목 가져오기
         content = pyperclip.paste()
         if selected_item:
