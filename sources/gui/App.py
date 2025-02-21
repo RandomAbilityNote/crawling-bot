@@ -9,6 +9,7 @@ from cloudinary import uploader
 import concurrent.futures
 import threading
 import pyperclip
+import platform
 
 class App:
     def __init__(self, root):
@@ -25,6 +26,11 @@ class App:
         self._image_files: list = []
         self._uploaded_image_urls: list = []
         self._lock = threading.Lock()  # 스레드 안전성을 위한 Lock
+
+        if platform.system() == "Darwin":  # macOS
+            self.root.bind("<Command-v>", self.on_ctrl_v)
+        else:  # Windows or Linux
+            self.root.bind("<Control-v>", self.on_ctrl_v)
 
     @property
     def progress(self):
@@ -48,7 +54,8 @@ class App:
         table_frame = tk.Frame(main_frame)
         table_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10, pady=10)
        
-        self.tree = ttk.Treeview(table_frame, columns=self._columns, show="headings")
+        self.tree = ttk.Treeview(table_frame, columns=self._columns, show="headings", selectmode="browse")
+        
         for col in self._columns:
             self.tree.heading(col, text=col)
             self.tree.column(col, width=150, anchor="center")
@@ -160,7 +167,7 @@ class App:
         if not self._image_files:
             print("❌ 비어있습니다")
             return 
-        
+        # 추후 제거
         self._uploaded_image_urls = ["1234","5678"]
         with concurrent.futures.ThreadPoolExecutor(max_workers=5) as worker:
             # future_to_image = {worker.submit(self.upload_image, img): img for img in self._image_files}
@@ -202,3 +209,15 @@ class App:
         label = tk.Label(toast, text=message, bg="black", fg="white", padx=10, pady=5)
         label.pack()
         toast.after(2000, toast.destroy)  # 2초 후에 토스트 메시지 닫기
+    
+    def on_ctrl_v(self, event):
+        print("⌨️ 이벤트 감지")
+        """Control + V 이벤트가 발생하면 특정 데이터를 삽입"""
+        selected_item = self.tree.selection()  # 선택된 항목 가져오기
+        content = pyperclip.paste()
+        if selected_item:
+            index = self.tree.index(selected_item[0])  # 첫 번째 선택된 항목의 인덱스 가져오기
+            self._dataSource[index].image = content
+            # 값을 변경하고 tree 업데이트
+            self.tree.item(selected_item, values=self._getter(self._dataSource[index]))
+            # 실제 데이터 넣기
