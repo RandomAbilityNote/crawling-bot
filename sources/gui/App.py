@@ -15,7 +15,7 @@ class App:
     def __init__(self, root):
         self._crawler = Crawler()
         self.root = root
-        json_file_path = os.path.join(os.path.dirname(__file__), "..", "..", "resources", "key.json")
+        json_file_path = get_resource_path("key.json")
         gc = service_account(json_file_path)
         self._doc = gc.open_by_url(spreadsheet_url)
         self._columns = ["name", "description", "tribes", "tip", "category", "image", "new"]

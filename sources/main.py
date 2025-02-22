@@ -9,7 +9,7 @@ from google.oauth2 import service_account
 from network import *
 
 # 🔥 서비스 계정 JSON 파일 경로 (직접 다운로드한 파일로 변경)
-SERVICE_ACCOUNT_FILE = os.path.join(os.path.dirname(__file__), "..", "resources", "service-account.json")
+SERVICE_ACCOUNT_FILE = get_resource_path("service-account.json")
 
 # Firebase Remote Config API의 OAuth 범위
 SCOPES = ["https://www.googleapis.com/auth/firebase.remoteconfig"]
@@ -47,7 +47,6 @@ def get_remote_version() -> str :
     response = session.send(prepped)
 
     if response.status_code == 200:
-        print("✅ Remote Config 데이터:")
         data = response.json()
         return data["parameters"]["python_tool_version"]["defaultValue"]["value"].strip('"')
     else:
