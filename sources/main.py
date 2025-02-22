@@ -1,6 +1,6 @@
 from gui import App
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import messagebox
 from firebase_admin import credentials
 import os
 import json
@@ -27,7 +27,7 @@ def get_access_token():
     return credentials.token
 
 # 🔥 Remote Config 데이터 가져오는 함수
-def get_remote_config():
+def get_remote_version() -> str :
     access_token = get_access_token()
     url = f"https://firebaseremoteconfig.googleapis.com/v1/projects/{project_id}/remoteConfig"
 
@@ -50,9 +50,37 @@ def get_remote_config():
 
     if response.status_code == 200:
         print("✅ Remote Config 데이터:")
-        print(json.dumps(response.json(), indent=4))  # JSON 데이터 출력
+        data = response.json()
+        return data["parameters"]["python_tool_version"]["defaultValue"]["value"].strip('"')
     else:
+        MAX = "10000.10000.10000"
         print("❌ 요청 실패:", response.text)
+        return  MAX
+    
+def compare_version(local: str, remote: str) -> bool :
+    def convert(versions: str) -> int:
+        version_list =  list(map(int, versions.split(".")))
+        version_value = 0 
+        for i, number in enumerate(version_list):
+            version_value += pow(10, 2-i) * number
+    
+        return version_value
+    
+    return convert(local) == convert(remote)
 
 if __name__ == "__main__":
-    get_remote_config()
+    root = tk.Tk()
+    remote_version = get_remote_version()
+
+    if compare_version(tool_version, remote_version):
+        app = App(root)
+        root.mainloop()
+    else:
+        # 🔥 시스템 경고 메시지 띄우기
+        print("강제 종료")
+        messagebox.showerror("업데이트 필요", "다음 버전을 설치해주세요.")
+
+        # 🔥 프로그램 강제 종료
+        os._exit(1)
+       
+
