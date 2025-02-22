@@ -1,8 +1,9 @@
 import os
-from dotenv import load_dotenv, find_dotenv
+from dotenv import load_dotenv
+from .utility import get_resource_path
 
 def init_env():
-      load_dotenv(find_dotenv(filename="resources/.env"))
+      load_dotenv(get_resource_path(".env"))
 
 init_env()
 

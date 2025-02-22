@@ -52,7 +52,7 @@ def get_remote_version() -> str :
     else:
         MAX = "10000.10000.10000"
         print("❌ 요청 실패:", response.text)
-        return  MAX
+        return MAX
     
 def compare_version(local: str, remote: str) -> bool :
     def convert(versions: str) -> int:
