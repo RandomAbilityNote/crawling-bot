@@ -67,8 +67,9 @@ def compare_version(local: str, remote: str) -> bool :
 
 if __name__ == "__main__":
     root = tk.Tk()
+    print(tool_version)
     remote_version = get_remote_version()
-
+ 
     if compare_version(tool_version, remote_version):
         app = App(root)
         root.mainloop()

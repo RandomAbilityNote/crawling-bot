@@ -3,7 +3,10 @@ from dotenv import load_dotenv
 from .utility import get_resource_path
 
 def init_env():
-      load_dotenv(get_resource_path(".env"))
+      print(f"isExisted: {os.path.exists(get_resource_path(".env"))} ")
+      print(f"isExisted: {os.path.exists(get_resource_path("key.json"))} ")
+      print(f"isExisted: {os.path.exists(get_resource_path("service-account.json"))} ")
+      load_dotenv(dotenv_path = get_resource_path(".env"))
 
 init_env()
 
