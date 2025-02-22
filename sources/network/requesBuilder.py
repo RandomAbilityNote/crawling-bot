@@ -40,7 +40,7 @@ class RequestBulder:
         self._file = file
         return self 
     
-    def header(self, headers: dict):
+    def headers(self, headers: dict):
         self._headers = headers
         return self
 

@@ -1,59 +1,58 @@
-from shared import *
-from operator import attrgetter
-from cloudinary import *
 from gui import App
 import tkinter as tk
 from tkinter import ttk, messagebox
+from firebase_admin import credentials
+import os
+import json
+import google.auth
+from shared import *
+import google.auth.transport.requests as gat
+from google.oauth2 import service_account
+from network import *
 
+# 🔥 서비스 계정 JSON 파일 경로 (직접 다운로드한 파일로 변경)
+SERVICE_ACCOUNT_FILE = os.path.join(os.path.dirname(__file__), "..", "resources", "service-account.json")
 
-# # header = ["name", "description", "tribes", "tip", "category", "image"]
+# Firebase Remote Config API의 OAuth 범위
+SCOPES = ["https://www.googleapis.com/auth/firebase.remoteconfig"]
 
-# def update(prev_sheet: Worksheet, sheet: Worksheet):
-#     records = prev_sheet.get_all_records()
-#     records_dict = {}
+# 🔥 Access Token 가져오는 함수
+def get_access_token():
+    credentials = service_account.Credentials.from_service_account_file(
+        SERVICE_ACCOUNT_FILE, scopes=SCOPES
+    )
+    
+    credentials.refresh(gat.Request())  # ✅ 올바른 사용 방법
+    
+    return credentials.token
 
-#     for record in records:
-#         records_dict[record["name"]] = record
+# 🔥 Remote Config 데이터 가져오는 함수
+def get_remote_config():
+    access_token = get_access_token()
+    url = f"https://firebaseremoteconfig.googleapis.com/v1/projects/{project_id}/remoteConfig"
 
-#     new_list: [Ability] = []
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Accept": "application/json",
+    }
 
-#     for data in crawling_data:
-#         if records_dict[data.name]:
-#             prev = records_dict[data.name]
-#             tip, category, image = (prev["tip"], prev["category"], prev["image"])
-#             new_element = Ability(data.name, data.desc, data.tribes, tip, category, image)
-#             new_list.append(new_element)
-#         else:
-#             new_list.append(Ability(data.name, data.desc, data.tribes))
+    request = (
+        RequestBulder()
+        .url(url)
+        .method(Method.get)
+        .headers(headers)
+        .build()
+    )
 
-#     getter = attrgetter(*header)
-#     sheet.update(range_name=f"A1:F1", values= [header])
-#     sheet.update(range_name=f"A2:F{2+len(crawling_data)-1}", values= [list(getter(ability)) for ability in new_list])
+    session = Session()
+    prepped = request.prepare()
+    response = session.send(prepped)
 
-# try:
-#     prev_sheet = doc.worksheet(prev_version)
-#     new_sheet = doc.worksheet(lastest_version)
-#     update(prev_sheet, new_sheet)
-#     print("✅ 업데이트 종료")
-# except WorksheetNotFound as e :
-#     doc.add_worksheet(title=lastest_version, rows= len(crawling_data)+1, cols=len(header))
-#     print(f"🎉 {lastest_version} 시트 생성")
-#     prev_sheet = doc.worksheet(prev_version)
-#     new_sheet = doc.worksheet(lastest_version)
-#     update(prev_sheet, new_sheet)
-#     print("✅ 업데이트 종료")
-
-# except Exception as e:
-#     print(f"Error: {e}")
-
-    # config =  ( config( 
-    #     cloud_name = "datnvjajn", 
-    #     api_key = api_key, 
-    #     api_secret = api_secret,
-    #     secure = True)
-    # )
+    if response.status_code == 200:
+        print("✅ Remote Config 데이터:")
+        print(json.dumps(response.json(), indent=4))  # JSON 데이터 출력
+    else:
+        print("❌ 요청 실패:", response.text)
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = App(root)
-    root.mainloop()
+    get_remote_config()

@@ -11,4 +11,5 @@ prev_version = os.getenv("PREV_VERSION")
 lastest_version = os.getenv("LASTEST_VERSION")
 api_key = os.getenv("API_KEY")
 api_secret = os.getenv("API_SECRET")
+project_id = os.getenv("PROJECT_ID")
 
