@@ -3,8 +3,6 @@ import tkinter as tk
 from tkinter import messagebox
 from firebase_admin import credentials
 import os
-import json
-import google.auth
 from shared import *
 import google.auth.transport.requests as gat
 from google.oauth2 import service_account
@@ -77,9 +75,7 @@ if __name__ == "__main__":
         root.mainloop()
     else:
         # 🔥 시스템 경고 메시지 띄우기
-        print("강제 종료")
         messagebox.showerror("업데이트 필요", "다음 버전을 설치해주세요.")
-
         # 🔥 프로그램 강제 종료
         os._exit(1)
        
