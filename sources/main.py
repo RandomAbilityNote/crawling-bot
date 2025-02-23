@@ -51,7 +51,6 @@ def get_remote_version() -> str :
         return data["parameters"]["python_tool_version"]["defaultValue"]["value"].strip('"')
     else:
         MAX = "10000.10000.10000"
-        print("❌ 요청 실패:", response.text)
         return MAX
     
 def compare_version(local: str, remote: str) -> bool :
@@ -67,10 +66,10 @@ def compare_version(local: str, remote: str) -> bool :
 
 if __name__ == "__main__":
     root = tk.Tk()
-    print(tool_version)
     remote_version = get_remote_version()
  
     if compare_version(tool_version, remote_version):
+        print(f"✅ 버전 {tool_version} 인증")
         app = App(root)
         root.mainloop()
     else:
