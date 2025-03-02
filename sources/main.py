@@ -48,7 +48,7 @@ def get_remote_version() -> str :
 
     if response.status_code == 200:
         data = response.json()
-        return data["parameters"]["python_tool_version"]["defaultValue"]["value"].strip('"')
+        return data["parameters"]["python_tool_version"]["defaultValue"]["value"]
     else:
         MAX = "10000.10000.10000"
         return MAX
